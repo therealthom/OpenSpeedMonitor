@@ -12,6 +12,9 @@ This is the standard dialog that initiates the delete action.
     <div class="modal-body">
         <p><g:message code="default.button.delete.confirm.messageWithArgument" args="[entityName]"
                       default="Do you really want to delete this item?"/></p>
+        <g:if test="${additionalInformationDelete}">
+            ${raw(additionalInformationDelete)}
+        </g:if>
 
         <div id="spinner-position"></div>
     </div>

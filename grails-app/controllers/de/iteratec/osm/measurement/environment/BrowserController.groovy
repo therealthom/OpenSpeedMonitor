@@ -1,6 +1,13 @@
 package de.iteratec.osm.measurement.environment
 
+import de.iteratec.osm.csi.BrowserConnectivityWeight
+import de.iteratec.osm.report.chart.CsiAggregation
+import de.iteratec.osm.result.EventResult
+import de.iteratec.osm.result.JobResult
+import de.iteratec.osm.util.I18nService
 import grails.converters.JSON
+import grails.gorm.DetachedCriteria
+import org.joda.time.DateTime
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 
@@ -10,7 +17,7 @@ import static org.springframework.http.HttpStatus.*
 //TODO: This controller was generated due to a scaffolding bug (https://github.com/grails3-plugins/scaffolding/issues/24). The dynamically scaffolded controllers cannot handle database exceptions
 
 class BrowserController {
-
+    I18nService i18nService
     static scaffold = Browser
     static allowedMethods = [save: "POST", update: "PUT", delete: "DELETE"]
 
@@ -19,7 +26,21 @@ class BrowserController {
     }
 
     def show(Browser browser) {
-        respond browser
+        int browserAliaseCount = BrowserAlias.countByBrowser(browser)
+        int browserConnectivityWeightCount = BrowserConnectivityWeight.countByBrowser(browser)
+        int csiAggregationCount = CsiAggregation.countByBrowser(browser)
+        int eventResultCount = EventResult.countByBrowser(browser)
+
+        int jobResultCount = EventResult.createCriteria().get{
+            eq('browser', browser)
+            projections {
+                countDistinct('jobResult')
+            }
+        }
+        String additionalInfoWarning = i18nService.msg("de.iteratec.osm.browser.delete.additionalinformations",
+                "The following Elements will also be deleted: <br> BrowserAliases: ${browserAliaseCount} <br>BrowserConnectivityWeights: ${browserConnectivityWeightCount}<br>CsiAggregations: ${csiAggregationCount}<br>EventResults: ${eventResultCount}<br>JobResults: ${jobResultCount}",
+                [browserAliaseCount,browserConnectivityWeightCount,csiAggregationCount,eventResultCount,jobResultCount])
+        ["browser":browser, "additionalInformationDelete":additionalInfoWarning]
     }
 
     def create() {
@@ -79,13 +100,25 @@ class BrowserController {
     }
 
     def delete(Browser browser) {
-
         if (browser == null) {
             notFound()
             return
         }
-
         try {
+            def criteria = new DetachedCriteria(CsiAggregation).build {
+                eq 'browser', browser
+            }
+            println new DateTime()
+            int total = criteria.deleteAll()
+            println "${total} csiAggregations deleted"
+            println new DateTime()
+            criteria = new DetachedCriteria(EventResult).build {
+                eq 'browser', browser
+            }
+            println new DateTime()
+            total = criteria.deleteAll()
+            println "${total} eventResults deleted"
+            println new DateTime()
             browser.delete(flush: true)
             flash.message = message(code: 'default.deleted.message', args: [message(code: 'browser.label', default: 'Browser'), params.id])
             redirect(action: "index")
