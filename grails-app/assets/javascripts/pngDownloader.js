@@ -16,6 +16,7 @@ OpenSpeedMonitor.ChartModules.PngDownloader = (function () {
             disabled: true
         });
         modal.on('hide.bs.modal', passBackSvg);
+        modal.on('shown.bs.modal', takeSvg);
     };
 
     var resize = function () {
@@ -26,7 +27,6 @@ OpenSpeedMonitor.ChartModules.PngDownloader = (function () {
         originalContainer = $(svgContainerId);
         chartModule = usedChartModule;
         svgElement = originalContainer ? originalContainer.find("svg") : null;
-        takeSvg();
     };
 
     var createPlaceholder = function (original) {

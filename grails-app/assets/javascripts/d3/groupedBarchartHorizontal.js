@@ -701,6 +701,13 @@ OpenSpeedMonitor.ChartModules.PageAggregationHorizontal = (function (chartIdenti
         return microsecsXScale(d.upperBoundary - d.lowerBoundary);
       });
 
+      trafficLight
+          .select("text")
+          .transition()
+          .duration(transitionDuration)
+          .attr("x", function (d) {
+              return microsecsXScale(d.upperBoundary - d.lowerBoundary) / 2;
+          });
   };
 
 
