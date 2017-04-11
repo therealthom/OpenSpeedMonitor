@@ -1,5 +1,69 @@
 //= require /bower_components/file-saver/FileSaver.min.js
 
+var OpenSpeedMonitor = OpenSpeedMonitor || {};
+OpenSpeedMonitor.ChartModules = OpenSpeedMonitor.ChartModules || {};
+OpenSpeedMonitor.ChartModules.PngDownloader = (function () {
+    var modal = $("#downloadAsPngModal");
+    var downloadContainer = $("#download-chart-container");
+    var originalContainer = null;
+    var svgPlaceholder = null;
+    var chartModule = null;
+    var svgElement = null;
+
+    var init = function() {
+        downloadContainer.resizable({
+            resize: resize,
+            disabled: true
+        });
+        modal.on('hide.bs.modal', passBackSvg);
+    };
+
+    var resize = function () {
+        chartModule.refresh();
+    };
+
+    var initFor = function (svgContainerId, usedChartModule) {
+        originalContainer = $(svgContainerId);
+        chartModule = usedChartModule;
+        svgElement = originalContainer ? originalContainer.find("svg") : null;
+        takeSvg();
+    };
+
+    var createPlaceholder = function (original) {
+        return $('<div/>', {
+            width: original.width(),
+            height: original.height()
+        });
+    };
+
+    var takeSvg = function () {
+        if (svgElement && chartModule) {
+            svgPlaceholder = createPlaceholder(svgElement);
+            svgElement.detach().appendTo(downloadContainer);
+            originalContainer.append(svgPlaceholder);
+            chartModule.refresh();
+            downloadContainer.resizable("enable");
+        } else {
+            console.error("Unable to find referenced SVG oder used chart module");
+        }
+    };
+
+    var passBackSvg = function () {
+        if (svgElement && originalContainer && chartModule) {
+            downloadContainer.resizable("disable");
+            svgPlaceholder.remove();
+            svgElement.detach().appendTo(originalContainer);
+            chartModule.refresh();
+        }
+    };
+
+    init();
+    return {
+        initFor: initFor
+    }
+})();
+
+
 /**
  * Converts a svg node to a png file
  * @param svgNode the node to convert ( e.g. d3.select('svg').node() )
@@ -7,13 +71,15 @@
  * @param width the width of the png in px
  * @param height the height of the png in px
  */
-function downloadAsPNG(svgNode, fileName, width, height) {
-    var svgString = getSVGString(svgNode);
-    svgString2Image(svgString, width, height, 'png', save); // passes Blob and filesize String to the callback
-
+function downloadAsPNG(svgNode, fileName) {
+    var svgString = getSVGString(svgNode[0]);
     function save(dataBlob) {
         saveAs(dataBlob, fileName); // FileSaver.js function
     }
+
+    svgString2Image(svgString, svgNode.width(), svgNode.height(), 'png', save); // passes Blob and filesize String to the callback
+
+
 
 }
 

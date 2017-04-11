@@ -384,7 +384,7 @@ OpenSpeedMonitor.ChartModules.PageAggregationHorizontal = (function (chartIdenti
   };
 
   var updateSvgWidth = function () {
-    var fullWidth = svgContainer.width();
+    var fullWidth = svg.node().parentNode.clientWidth;
     svg.attr("width", fullWidth);
     width = fullWidth - margin.left - margin.right;
   };
@@ -707,7 +707,8 @@ OpenSpeedMonitor.ChartModules.PageAggregationHorizontal = (function (chartIdenti
   initChart();
 
   return {
-    drawChart: drawChart
+    drawChart: drawChart,
+    refresh: drawAllBars
   };
 
 });
